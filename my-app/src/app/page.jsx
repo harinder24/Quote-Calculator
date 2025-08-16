@@ -5,10 +5,17 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const [data, setData] = useState([{ width: 0, height: 0, result: 0 }]);
   const [result, setResult] = useState(0);
-  useEffect(()=>{
+  const [fabric, setFabric] = useState(0);
+  const [price, setPrice] = useState(0);
+  useEffect(() => {
     const total = data.reduce((sum, item) => sum + item.result, 0);
-    setResult(total)
-  },[data])
+    setResult(total);
+    setPrice(fabric * total);
+  }, [data,fabric]);
+
+  const handleChange = (e) => {
+    setFabric(e.target.value);
+  };
 
   return (
     <>
@@ -23,7 +30,7 @@ export default function Home() {
           {data.map((item, index) => {
             return (
               <IndividualInput
-              key={index}
+                key={index}
                 width={item.width}
                 height={item.height}
                 result={item.result}
@@ -46,7 +53,19 @@ export default function Home() {
               +
             </button>
             <div className=" h-full flex flx-row justify-center items-center">
-              <p>Result = {result}</p>
+              <p>Total = {result}</p>
+            </div>
+          </div>
+          <div className="w-full flex flex-row justify-between h-12">
+            <input
+              className="h-full border-[1px] px-2 rounded-md max-[600px]:w-[175px]"
+              value={fabric > 0 ? fabric : ""}
+              onChange={handleChange}
+              type="number"
+              placeholder="Fabric multiplier"
+            />
+            <div className=" h-full flex flx-row justify-center items-center">
+              <p>Price = CAD${price}</p>
             </div>
           </div>
         </div>
@@ -72,15 +91,15 @@ function IndividualInput({ width, height, result, index, setData }) {
     }
     let w = width;
     let h = height;
-  
-    let w2 = w.toString().split('.')
-    let h2 = h.toString().split('.')
-    if(w2.length > 1) {
+
+    let w2 = w.toString().split(".");
+    let h2 = h.toString().split(".");
+    if (w2.length > 1) {
       const feet = Math.floor(w);
       const inches = Math.round((w - feet) * 12);
       w = feet * 12 + inches;
     }
-    if(h2.length > 1) {
+    if (h2.length > 1) {
       const feet = Math.floor(h);
       const inches = Math.round((h - feet) * 12);
       h = feet * 12 + inches;
@@ -106,18 +125,21 @@ function IndividualInput({ width, height, result, index, setData }) {
     const value = e.target.value;
     if (/^\d*\.?\d*$/.test(value)) {
       setData((prevItems) => {
-            const updated = [...prevItems];
-            updated[index] = { ...updated[index], width: value };
-            return updated;
-          });
-    }       
+        const updated = [...prevItems];
+        updated[index] = { ...updated[index], width: value };
+        return updated;
+      });
+    }
   };
   const handleDeleteChange = () => {
-    setData(prevItems => prevItems.filter((item, i) => i !== index));     
+    setData((prevItems) => prevItems.filter((item, i) => i !== index));
   };
   return (
     <div className="flex flex-row gap-4  h-12 max-[600px]:w-full">
-      <button onClick={()=>handleDeleteChange()} className=" bg-red-600 hover:bg-red-700 text-white px-6 rounded-md cursor-pointer">
+      <button
+        onClick={() => handleDeleteChange()}
+        className=" bg-red-600 hover:bg-red-700 text-white px-6 rounded-md cursor-pointer"
+      >
         -
       </button>
       <input
@@ -125,7 +147,7 @@ function IndividualInput({ width, height, result, index, setData }) {
         type="number"
         value={width > 0 ? width : ""}
         onChange={(e) => {
-          handleWidthChange(e)
+          handleWidthChange(e);
         }}
         placeholder="Width"
       />
