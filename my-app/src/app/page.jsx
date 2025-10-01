@@ -1,5 +1,5 @@
 "use client";
-
+import { MaxRectsPacker } from "maxrects-packer";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -7,6 +7,7 @@ export default function Home() {
   const [result, setResult] = useState(0);
   const [fabric, setFabric] = useState(0);
   const [price, setPrice] = useState(0);
+  
   useEffect(() => {
     const total = data.reduce((sum, item) => sum + item.result, 0);
     setResult(total);
@@ -21,10 +22,7 @@ export default function Home() {
     <>
       <div className="flex flex-row justify-center">
         <div className="max-w-[1400px] px-4 flex flex-col gap-4 items-center py-4">
-          <p className="text-center">
-            for feet use "." like 5.0 or 6.9, for inches use without "." like 67
-          </p>
-          <button className=" bg-green-600 hover:bg-green-700 text-white px-6 h-12 rounded-md cursor-pointer">
+          <button onClick={() => {setData([{ width: 0, height: 0, result: 0 }]); setFabric(0); setPrice(0);}} className=" bg-green-600 hover:bg-green-700 text-white px-6 h-12 rounded-md cursor-pointer">
             Refresh
           </button>
           {data.map((item, index) => {
@@ -68,6 +66,7 @@ export default function Home() {
               <p>Price = CAD${price}</p>
             </div>
           </div>
+          <RollLayoutPage />
         </div>
       </div>
     </>
@@ -92,18 +91,7 @@ function IndividualInput({ width, height, result, index, setData }) {
     let w = width;
     let h = height;
 
-    let w2 = w.toString().split(".");
-    let h2 = h.toString().split(".");
-    if (w2.length > 1) {
-      const feet = Math.floor(w);
-      const inches = Math.round((w - feet) * 12);
-      w = feet * 12 + inches;
-    }
-    if (h2.length > 1) {
-      const feet = Math.floor(h);
-      const inches = Math.round((h - feet) * 12);
-      h = feet * 12 + inches;
-    }
+   
     w = w / 12;
     h = h / 12;
     if (w < 3) {
@@ -173,3 +161,118 @@ function IndividualInput({ width, height, result, index, setData }) {
     </div>
   );
 }
+
+
+
+
+function RollLayoutPage() {
+  const [pieces, setPieces] = useState([]);
+  const [input, setInput] = useState({ width: "", height: "", qty: "1" });
+  const [placed, setPlaced] = useState([]);
+  const [efficiency, setEfficiency] = useState(0);
+
+const ROLL_WIDTH = 120;   // inches
+const ROLL_HEIGHT = 1800; // inches
+  const addPiece = () => {
+    if (!input.width || !input.height) return;
+    setPieces((prev) => [
+      ...prev,
+      {
+        width: parseFloat(input.width),
+        height: parseFloat(input.height),
+        qty: parseInt(input.qty),
+      },
+    ]);
+    setInput({ width: "", height: "", qty: "1" });
+  };
+
+  // 🔹 Run packing whenever pieces change
+  useEffect(() => {
+    if (pieces.length === 0) {
+      setPlaced([]);
+      setEfficiency(0);
+      return;
+    }
+
+    const packer = new MaxRectsPacker(ROLL_WIDTH, ROLL_HEIGHT, 0);
+
+    pieces.forEach((p) => {
+      for (let i = 0; i < p.qty; i++) {
+        packer.add(p.width, p.height, { id: `${p.width}x${p.height}-${i}` });
+      }
+    });
+
+    const rects = packer.bins[0]?.rects || [];
+    setPlaced(rects);
+
+    const usedArea = rects.reduce((sum, r) => sum + r.width * r.height, 0);
+    const totalArea = ROLL_WIDTH * ROLL_HEIGHT;
+    setEfficiency(((usedArea / totalArea) * 100).toFixed(1));
+  }, [pieces]);
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">Roll Cutting Optimizer (Smart Packing)</h1>
+
+      {/* Input form */}
+      <div className="flex gap-3 mb-6">
+        <input
+          type="number"
+          placeholder="Width (in)"
+          value={input.width}
+          onChange={(e) => setInput({ ...input, width: e.target.value })}
+          className="border p-2 rounded w-28"
+        />
+        <input
+          type="number"
+          placeholder="Height (in)"
+          value={input.height}
+          onChange={(e) => setInput({ ...input, height: e.target.value })}
+          className="border p-2 rounded w-28"
+        />
+        <input
+          type="number"
+          placeholder="Qty"
+          value={input.qty}
+          onChange={(e) => setInput({ ...input, qty: e.target.value })}
+          className="border p-2 rounded w-20"
+        />
+        <button
+          onClick={addPiece}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Add
+        </button>
+      </div>
+
+      {/* Visualization */}
+      <div
+        className="relative border border-gray-400 bg-gray-100"
+        style={{
+          width: "600px",
+          height: `${(ROLL_HEIGHT / ROLL_WIDTH) * 600}px`,
+        }}
+      >
+        {placed.map((p, i) => (
+          <div
+            key={i}
+            className="absolute border border-black bg-green-400 flex items-center justify-center text-xs"
+            style={{
+              left: `${(p.x / ROLL_WIDTH) * 600}px`,
+              top: `${(p.y / ROLL_WIDTH) * 600}px`,
+              width: `${(p.width / ROLL_WIDTH) * 600}px`,
+              height: `${(p.height / ROLL_WIDTH) * 600}px`,
+            }}
+          >
+            {p.width}×{p.height}
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-4">
+        Efficiency: <b>{efficiency}%</b>
+      </p>
+    </div>
+  );
+}
+
