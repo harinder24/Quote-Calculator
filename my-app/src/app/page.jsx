@@ -77,12 +77,7 @@ console.log(data);
           }
           
         }
-        if(data[0].width === 0 && data[0].height === 0){
-          setData(dimentionsArray);
-        }else{
-      setData(prevArray => [...prevArray, ...dimentionsArray]);
-        }
-      
+       setData(prevArray => [...prevArray, ...dimentionsArray]);
     } catch (err) {
       console.error(err);
     }
