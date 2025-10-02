@@ -39,7 +39,7 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
       
       const response = await fetch(
-        `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`,
+        `https://vision.googleapis.com/v1/images:annotate?key=AIzaSyA6QcZP8TX4aHerdVMqd0eZLP5kpOCXzjg`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
